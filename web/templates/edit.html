@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">编辑题目</h2>
+<form method="POST" action="{{ url_for('edit_question', index=index) }}">
+    <div class="mb-3">
+        <label for="content" class="form-label">题目描述</label>
+        <input type="text" class="form-control" id="content" name="content" value="{{ question.content }}" required>
+        <div class="form-text">请不要包含 '|' 符号。</div>
+    </div>
+    <div class="mb-3">
+        <label for="answer" class="form-label">标准答案</label>
+        <input type="text" class="form-control" id="answer" name="answer" value="{{ question.answer }}" required>
+        <div class="form-text">支持多个正确答案，请用分号 (;) 或中文分号 (；) 分隔。</div>
+    </div>
+    <div class="mb-3">
+        <label for="score" class="form-label">分值</label>
+        <input type="number" class="form-control" id="score" name="score" value="{{ question.score }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">保存修改</button>
+    <a href="/manage" class="btn btn-secondary">取消</a>
+</form>
+{% endblock %}

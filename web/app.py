@@ -91,6 +91,28 @@ def delete_question(index):
         save_all_questions(questions)
     return redirect(url_for('manage'))
 
+@app.route('/edit/<int:index>', methods=['GET', 'POST'])
+def edit_question(index):
+    questions = load_questions()
+    if not (0 <= index < len(questions)):
+        return redirect(url_for('manage'))
+    
+    if request.method == 'POST':
+        content = request.form.get('content')
+        answer = request.form.get('answer')
+        score = request.form.get('score')
+        
+        if content and answer and score:
+            questions[index] = {
+                'content': content,
+                'answer': answer,
+                'score': int(score)
+            }
+            save_all_questions(questions)
+            return redirect(url_for('manage'))
+            
+    return render_template('edit.html', question=questions[index], index=index)
+
 @app.route('/exam', methods=['GET', 'POST'])
 def exam():
     questions = load_questions()
