@@ -31,31 +31,34 @@ def load_questions():
     if not os.path.exists(DATA_FILE):
         return questions
     
+    lines = []
     try:
-        with open(DATA_FILE, 'r', encoding='gbk') as f: # Assuming GBK for Windows compatibility with C app usually
-             for line in f:
-                line = line.strip()
-                if not line: continue
-                parts = line.split('|')
-                if len(parts) >= 3:
-                    questions.append({
-                        'content': parts[0],
-                        'answer': parts[1],
-                        'score': int(parts[2])
-                    })
-    except UnicodeDecodeError:
-        # Try UTF-8 if GBK fails
+        # Try UTF-8 first (standard)
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
-             for line in f:
-                line = line.strip()
-                if not line: continue
-                parts = line.split('|')
-                if len(parts) >= 3:
-                    questions.append({
-                        'content': parts[0],
-                        'answer': parts[1],
-                        'score': int(parts[2])
-                    })
+            lines = f.readlines()
+    except UnicodeDecodeError:
+        try:
+            # Try GB18030 (superset of GBK, common on Windows CN)
+            with open(DATA_FILE, 'r', encoding='gb18030') as f:
+                lines = f.readlines()
+        except UnicodeDecodeError:
+            # Fallback with replacement to avoid crash
+            with open(DATA_FILE, 'r', encoding='gb18030', errors='replace') as f:
+                lines = f.readlines()
+
+    for line in lines:
+        line = line.strip()
+        if not line: continue
+        parts = line.split('|')
+        if len(parts) >= 3:
+            try:
+                questions.append({
+                    'content': parts[0],
+                    'answer': parts[1],
+                    'score': int(parts[2])
+                })
+            except ValueError:
+                continue
     return questions
 
 def save_question(content, answer, score):
