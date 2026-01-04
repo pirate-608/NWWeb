@@ -101,28 +101,41 @@ def exam():
         for i, q in enumerate(questions):
             user_ans = request.form.get(f'q_{i}', '')
             
-            # Use C function for grading if available
-            if lib:
-                # Encode strings to bytes for C (GBK for Windows C app compatibility usually)
-                # But grading.c uses tolower which works on ASCII. 
-                # If Chinese characters are involved, simple byte comparison works if encoding matches.
-                try:
-                    b_user = user_ans.encode('gbk')
-                    b_correct = q['answer'].encode('gbk')
-                except:
-                    b_user = user_ans.encode('utf-8')
-                    b_correct = q['answer'].encode('utf-8')
-                    
-                score = lib.calculate_score(b_user, b_correct, q['score'])
-            else:
-                # Fallback python implementation
-                score = q['score'] if user_ans.strip().lower() == q['answer'].strip().lower() else 0
+            # Support multiple valid answers separated by ; or ；
+            valid_answers = q['answer'].replace('；', ';').split(';')
+            valid_answers = [ans.strip() for ans in valid_answers if ans.strip()]
+            if not valid_answers:
+                valid_answers = [q['answer']] # Fallback if split results in empty
+
+            score = 0
+            # Check against all valid answers and take the max score
+            for correct_ans in valid_answers:
+                current_score = 0
+                # Use C function for grading if available
+                if lib:
+                    # Encode strings to bytes for C (GBK for Windows C app compatibility usually)
+                    # But grading.c uses tolower which works on ASCII. 
+                    # If Chinese characters are involved, simple byte comparison works if encoding matches.
+                    try:
+                        b_user = user_ans.encode('gbk')
+                        b_correct = correct_ans.encode('gbk')
+                    except:
+                        b_user = user_ans.encode('utf-8')
+                        b_correct = correct_ans.encode('utf-8')
+                        
+                    current_score = lib.calculate_score(b_user, b_correct, q['score'])
+                else:
+                    # Fallback python implementation
+                    current_score = q['score'] if user_ans.strip().lower() == correct_ans.strip().lower() else 0
+                
+                if current_score > score:
+                    score = current_score
             
             total_score += score
             results.append({
                 'question': q['content'],
                 'user_ans': user_ans,
-                'correct_ans': q['answer'],
+                'correct_ans': q['answer'], # Show original full answer string
                 'score': score,
                 'full_score': q['score']
             })
