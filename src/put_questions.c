@@ -8,6 +8,11 @@ void display_question(int index, Question q) {
 }
 
 void display_wrong_questions(Question* q_array, int count) {
+    if (!q_array) {
+        LOG_ERROR("Invalid q_array passed to display_wrong_questions");
+        return;
+    }
+
     printf(ANSI_COLOR_RED "\n================ 错题回顾 ================\n" ANSI_COLOR_RESET);
     int wrong_count = 0;
 

@@ -19,6 +19,10 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 #define ANSI_BOLD          "\x1b[1m"
 
+// Logging Macros
+#define LOG_ERROR(fmt, ...) fprintf(stderr, ANSI_COLOR_RED "[ERROR] %s:%d: " fmt ANSI_COLOR_RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)  fprintf(stderr, ANSI_COLOR_BLUE "[INFO] " fmt ANSI_COLOR_RESET "\n", ##__VA_ARGS__)
+
 // 题目结构体
 typedef struct {
     int id;

@@ -47,6 +47,11 @@ def load_user(user_id):
 
 @app.after_request
 def add_header(response):
+    # Security Headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
     # 尝试解决 ngrok 免费版拦截页面问题 (主要针对 API 调用或特定客户端)
     response.headers['ngrok-skip-browser-warning'] = 'true'
     # 防止浏览器缓存页面 (对于考试页面很重要)
@@ -526,5 +531,15 @@ def add():
             
     return render_template('add.html', categories=data_manager.get_categories())
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Disable debug mode in production/packaged environment
+    debug_mode = not getattr(sys, 'frozen', False)
+    app.run(debug=debug_mode, port=5000)

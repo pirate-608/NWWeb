@@ -62,7 +62,12 @@ class Config:
         # Uploads
         UPLOAD_FOLDER = os.path.join(BASE_DIR, 'web', 'static', 'uploads')
 
-    SECRET_KEY = 'auto_grading_system_secret_key'
+    # Security & Session Config
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'auto_grading_system_dev_key_change_in_prod'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    # SESSION_COOKIE_SECURE = True # Uncomment if running over HTTPS
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size

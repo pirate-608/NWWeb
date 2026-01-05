@@ -78,8 +78,14 @@ void save_exam_record(int total_score, int max_score, int duration_sec) {
         char time_str[64];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", localtime(&now));
         
-        fprintf(fp, "%s|%d|%d|%d\n", time_str, total_score, max_score, duration_sec);
+        if (fprintf(fp, "%s|%d|%d|%d\n", time_str, total_score, max_score, duration_sec) < 0) {
+            LOG_ERROR("Failed to write exam record to %s", HISTORY_FILE);
+        } else {
+            LOG_INFO("Saved exam record: %s, Score: %d/%d", time_str, total_score, max_score);
+        }
         fclose(fp);
+    } else {
+        LOG_ERROR("Failed to open history file %s for appending", HISTORY_FILE);
     }
 }
 
@@ -89,6 +95,7 @@ void view_exam_history() {
     
     FILE *fp = fopen(HISTORY_FILE, "r");
     if (!fp) {
+        LOG_INFO("No history file found at %s", HISTORY_FILE);
         printf("暂无历史记录。\n");
         pause_console();
         return;
@@ -110,7 +117,8 @@ void view_exam_history() {
         char *dur_str = strtok(NULL, "|");
         
         if (time_str && score_str && max_str) {
-            strcpy(records[count].time, time_str);
+            strncpy(records[count].time, time_str, sizeof(records[count].time) - 1);
+            records[count].time[sizeof(records[count].time) - 1] = '\0';
             records[count].score = atoi(score_str);
             records[count].max = atoi(max_str);
             count++;
@@ -143,11 +151,20 @@ void view_exam_history() {
 
 void start_exam() {
     clear_screen();
-    Question questions[MAX_QUESTIONS];
+    
+    // 优化：使用堆内存分配，避免栈溢出风险 (Question 结构体较大)
+    Question *questions = (Question*)malloc(MAX_QUESTIONS * sizeof(Question));
+    if (!questions) {
+        LOG_ERROR("Memory allocation failed for questions array");
+        pause_console();
+        return;
+    }
+
     int count = load_questions(DATA_FILE, questions);
 
     if (count == 0) {
         printf(ANSI_COLOR_RED "题库为空，请先在主菜单添加题目！\n" ANSI_COLOR_RESET);
+        free(questions);
         pause_console();
         return;
     }
@@ -218,6 +235,7 @@ void start_exam() {
     // 5. 显示错题
     display_wrong_questions(questions, count);
     
+    free(questions); // 释放内存
     pause_console();
 }
 
