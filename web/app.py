@@ -1,4 +1,5 @@
 import os
+import sys
 import ctypes
 import uuid
 import json
@@ -13,7 +14,22 @@ from config import Config
 from utils.data_manager import DataManager
 from models import db, User
 
-app = Flask(__name__)
+if getattr(sys, 'frozen', False):
+    # Determine base directory for resources
+    if hasattr(sys, '_MEIPASS'):
+        base_dir = sys._MEIPASS
+    else:
+        # Onedir mode, usually in _internal
+        base_dir = os.path.join(os.path.dirname(sys.executable), '_internal')
+        if not os.path.exists(base_dir):
+            base_dir = os.path.dirname(sys.executable)
+
+    template_folder = os.path.join(base_dir, 'templates')
+    static_folder = os.path.join(base_dir, 'static')
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+else:
+    app = Flask(__name__)
+
 app.config.from_object(Config)
 db.init_app(app)
 
